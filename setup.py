@@ -1,9 +1,9 @@
 import setuptools
-setuptools.setup(name='deeplearn',
-      version='0.1',
+setuptools.setup(name='deeplearnt',
+      version='0.0.3',
       description='clinical trial information retriver',
-      url='http://github.com/tongling/clinicaltrial',
-      author='lowe',
+      url='https://github.com/pergrand/deeplearntool',
+      author='lowe.li',
       author_email='alilzg@aliyun.com',
       license='MIT',
       packages=setuptools.find_packages(),
