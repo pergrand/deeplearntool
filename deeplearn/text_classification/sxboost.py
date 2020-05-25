@@ -44,8 +44,8 @@ xtrain_v, xvalid_v = tf_idf(xtrain, xvalid, 3, 0.5, stwlist)
 # 第六步 Logistic Regression模型
 # 利用提取的TFIDF特征来fit一个简单的Logistic Regression
 print('LR Train classifier...')
-model = LogisticRegression(C=1.0,solver='lbfgs',multi_class='multinomial')
-# model = xgboost()
+# clf = LogisticRegression(C=1.0,solver='lbfgs',multi_class='multinomial')
+model = xgboost()
 
 model.fit(xtrain_v, ytrain)
 

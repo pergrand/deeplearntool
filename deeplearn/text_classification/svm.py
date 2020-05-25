@@ -41,21 +41,31 @@ xtrain_v, xvalid_v = tf_idf(xtrain, xvalid, 3, 0.5, stwlist)
 # Words Count Vectorizer
 # xtrain_v, xvalid_v = wcv(xtrain, xvalid, 3, 0.5, stwlist)
 
-# 第六步 Logistic Regression模型
-# 利用提取的TFIDF特征来fit一个简单的Logistic Regression
-print('LR Train classifier...')
-model = LogisticRegression(C=1.0,solver='lbfgs',multi_class='multinomial')
-# model = xgboost()
+#使用SVD进行降维，components设为120，对于SVM来说，SVD的components的合适调整区间一般为120~200
+svd = decomposition.TruncatedSVD(n_components=120)
+svd.fit(xtrain_v)
+xtrain_svd = svd.transform(xtrain_v)
+xvalid_svd = svd.transform(xvalid_v)
 
-model.fit(xtrain_v, ytrain)
+#对从SVD获得的数据进行缩放
+scl = preprocessing.StandardScaler()
+scl.fit(xtrain_svd)
+xtrain_svd_scl = scl.transform(xtrain_svd)
+xvalid_svd_scl = scl.transform(xvalid_svd)
+
+# 第六步 Logistic Regression模型
+# 调用下SVM模型
+clf = svm()  # since we need probabilities
+clf.fit(xtrain_svd_scl, ytrain)
+
 
 # 保存模型
 model_path = 'clf.pickle'
-savemodel(model_path, model)
+savemodel(model_path, clf)
 
 
 # 第七步 预测
 clf2 = loadmodel(model_path)
-predictions = clf2.predict_proba(xvalid_v)
+predictions = clf2.predict_proba(xvalid_svd_scl)
 print("logloss: %0.3f " % multiclass_logloss(yvalid, predictions))
 

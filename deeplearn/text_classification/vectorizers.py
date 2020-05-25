@@ -4,6 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 提取特征
 """
 
+# tf-idf
 def tf_idf(xtrain, xvalid, min_df,max_df,stwlist):
     def number_normalizer(tokens):
         """ 将所有数字标记映射为一个占位符（Placeholder）。
@@ -31,4 +32,17 @@ def tf_idf(xtrain, xvalid, min_df,max_df,stwlist):
     tfv.fit(list(xtrain) + list(xvalid))
     xtrain_v = tfv.transform(xtrain)
     xvalid_v = tfv.transform(xvalid)
+    return xtrain_v, xvalid_v
+
+# Word Counts
+def wcv(xtrain, xvalid, min_df,max_df,stwlist):
+    ctv = CountVectorizer(min_df=3,
+                          max_df=0.5,
+                          ngram_range=(1, 2),
+                          stop_words=stwlist)
+
+    # 使用Count Vectorizer来fit训练集和测试集（半监督学习）
+    ctv.fit(list(xtrain) + list(xvalid))
+    xtrain_v = ctv.transform(xtrain)
+    xvalid_v = ctv.transform(xvalid)
     return xtrain_v, xvalid_v

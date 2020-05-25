@@ -36,26 +36,43 @@ xtrain, xvalid, ytrain, yvalid = train_test_split(data.文本分词.values, y,
 
 stop_file = '停用词汇总.txt'
 stwlist = stopword(stop_file)
-# 第五步 TF-IDF 提取特征
+# 第五步 TF-IDF 提取特征 / word count/ word vector
 xtrain_v, xvalid_v = tf_idf(xtrain, xvalid, 3, 0.5, stwlist)
 # Words Count Vectorizer
 # xtrain_v, xvalid_v = wcv(xtrain, xvalid, 3, 0.5, stwlist)
 
-# 第六步 Logistic Regression模型
-# 利用提取的TFIDF特征来fit一个简单的Logistic Regression
-print('LR Train classifier...')
-model = LogisticRegression(C=1.0,solver='lbfgs',multi_class='multinomial')
-# model = xgboost()
+#使用SVD进行降维，components设为120，对于SVM来说，SVD的components的合适调整区间一般为120~200
+svd = decomposition.TruncatedSVD(n_components=120)
+svd.fit(xtrain_v)
+xtrain_svd = svd.transform(xtrain_v)
+xvalid_svd = svd.transform(xvalid_v)
 
-model.fit(xtrain_v, ytrain)
+#对从SVD获得的数据进行缩放
+scl = preprocessing.StandardScaler()
+scl.fit(xtrain_svd)
+xtrain_svd_scl = scl.transform(xtrain_svd)
+xvalid_svd_scl = scl.transform(xvalid_svd)
 
-# 保存模型
-model_path = 'clf.pickle'
-savemodel(model_path, model)
+# 对标签进行binarize处理
+ytrain_enc = np_utils.to_categorical(ytrain)
+yvalid_enc = np_utils.to_categorical(yvalid)
 
+#创建1个3层的序列神经网络（Sequential Neural Net）
+model = Sequential()
 
-# 第七步 预测
-clf2 = loadmodel(model_path)
-predictions = clf2.predict_proba(xvalid_v)
-print("logloss: %0.3f " % multiclass_logloss(yvalid, predictions))
+model.add(Dense(120, input_dim=120, activation='relu'))
+model.add(Dropout(0.2))
+model.add(BatchNormalization())
 
+model.add(Dense(120, activation='relu'))
+model.add(Dropout(0.3))
+model.add(BatchNormalization())
+
+model.add(Dense(8))
+model.add(Activation('softmax'))
+
+# 模型编译
+model.compile(loss='categorical_crossentropy', optimizer='adam')
+model.fit(xtrain_svd_scl, y=ytrain_enc, batch_size=64,
+          epochs=1, verbose=1,
+          validation_data=(xvalid_svd_scl, yvalid_enc))

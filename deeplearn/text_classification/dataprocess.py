@@ -1,6 +1,7 @@
 
 import pandas as pd
 import jieba
+import pickle  # pickle模块
 
 def readfile(file_name,sheet_num):
     data = pd.read_excel(file_name, sheet_num)
@@ -19,6 +20,19 @@ def cutword(data,name_head):
 def stopword(filename):
     stwlist = [line.strip() for line in open('停用词汇总.txt', 'r', encoding='utf-8').readlines()]
     return stwlist
+
+def savemodel(model_path, clf):
+    model_path = 'clf.pickle'
+    with open(model_path, 'wb') as f:
+        pickle.dump(clf, f)
+
+def loadmodel(model_path):
+    model_path = 'clf.pickle'
+    # 读取Model
+    with open(model_path, 'rb') as f:
+        return pickle.load(f)
+
+
 """
 多线程分词
 """
